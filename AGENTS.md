@@ -6,6 +6,12 @@ This document provides instructions for agents working on this repository.
 
 - **Indentation**: Use 2 spaces for indentation.
 - **Brackets**: Use Java-style brackets, where the opening brace is on the same line as the statement.
+
+  ```csharp
+  void MyMethod() {
+    // code
+  }
+  ```
 - **Constructors**: Use primary constructors for dependency injection in .NET 9.
 - **Variable Declaration**: Do not use the `var` keyword. Specify the type explicitly on the left-hand side of the assignment.
 
