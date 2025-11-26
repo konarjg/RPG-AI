@@ -9,8 +9,7 @@ using NSubstitute;
 
 namespace UnitTests;
 
-public class GameplayServiceTests
-{
+public class GameplayServiceTests {
   private readonly ICampaignRepository _campaignRepository = Substitute.For<ICampaignRepository>();
   private readonly IEmbeddingRepository _embeddingRepository = Substitute.For<IEmbeddingRepository>();
   private readonly IEventBroadcaster _eventBroadcaster = Substitute.For<IEventBroadcaster>();
@@ -22,8 +21,7 @@ public class GameplayServiceTests
 
   private readonly GameplayService _sut;
 
-  public GameplayServiceTests()
-  {
+  public GameplayServiceTests() {
     _sut = new GameplayService(
       _campaignRepository,
       _embeddingRepository,
@@ -39,8 +37,7 @@ public class GameplayServiceTests
   [Theory]
   [MemberData(nameof(StartSessionAsyncSuccessCases))]
   public async Task StartSessionAsync_ShouldCreateNewSession_WhenCampaignExistsAndNoActiveSession(
-    StartSessionCommand command, Campaign campaign)
-  {
+    StartSessionCommand command, Campaign campaign) {
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns(campaign);
 
     Session result = await _sut.StartSessionAsync(command);
@@ -53,16 +50,13 @@ public class GameplayServiceTests
     await _unitOfWork.Received(1).SaveChangesAsync();
   }
 
-  public static IEnumerable<object[]> StartSessionAsyncSuccessCases()
-  {
+  public static IEnumerable<object[]> StartSessionAsyncSuccessCases() {
     Guid userId = Guid.NewGuid();
     Guid campaignId = Guid.NewGuid();
 
-    yield return new object[]
-    {
+    yield return new object[] {
       new StartSessionCommand(userId, campaignId, "New Session"),
-      new Campaign
-      {
+      new Campaign {
         Id = campaignId,
         GameMasterUserId = userId,
         GameSystemId = Guid.NewGuid(),
@@ -74,8 +68,7 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task StartSessionAsync_ShouldThrowNotFoundException_WhenCampaignNotFound()
-  {
+  public async Task StartSessionAsync_ShouldThrowNotFoundException_WhenCampaignNotFound() {
     StartSessionCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "New Session");
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns((Campaign)null);
 
@@ -85,20 +78,16 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task StartSessionAsync_ShouldThrowAlreadyExistsException_WhenSessionExists()
-  {
+  public async Task StartSessionAsync_ShouldThrowAlreadyExistsException_WhenSessionExists() {
     StartSessionCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "New Session");
-    Campaign campaign = new()
-    {
+    Campaign campaign = new() {
       Id = command.CampaignId,
       GameMasterUserId = command.UserId,
       GameSystemId = Guid.NewGuid(),
       Name = "Test Campaign",
       Overview = "Test Overview",
-      Sessions = new List<Session>
-      {
-        new()
-        {
+      Sessions = new List<Session> {
+        new() {
           Id = Guid.NewGuid(),
           CampaignId = command.CampaignId,
           Title = "Active Session",
@@ -117,8 +106,7 @@ public class GameplayServiceTests
   [Theory]
   [MemberData(nameof(ProcessTurnAsyncSuccessCases))]
   public async Task ProcessTurnAsync_ShouldProcessTurn_WhenCampaignAndActiveSessionExist(
-    ProcessTurnCommand command, Campaign campaign)
-  {
+    ProcessTurnCommand command, Campaign campaign) {
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns(campaign);
     _aiClient.EmbedTextAsync(Arg.Any<string>()).Returns(new float[] { 1, 2, 3 });
     _aiClient.ReactToEventAsync(Arg.Any<AiActionRequest>()).Returns(new AiActionResponse("AI Response", null));
@@ -130,26 +118,21 @@ public class GameplayServiceTests
     await _unitOfWork.Received(1).SaveChangesAsync();
   }
 
-  public static IEnumerable<object[]> ProcessTurnAsyncSuccessCases()
-  {
+  public static IEnumerable<object[]> ProcessTurnAsyncSuccessCases() {
     Guid userId = Guid.NewGuid();
     Guid campaignId = Guid.NewGuid();
     Guid characterId = Guid.NewGuid();
 
-    yield return new object[]
-    {
+    yield return new object[] {
       new ProcessTurnCommand(userId, campaignId, "Test Message", characterId, DateTime.UtcNow),
-      new Campaign
-      {
+      new Campaign {
         Id = campaignId,
         GameMasterUserId = userId,
         GameSystemId = Guid.NewGuid(),
         Name = "Test Campaign",
         Overview = "Test Overview",
-        Sessions = new List<Session>
-        {
-          new()
-          {
+        Sessions = new List<Session> {
+          new() {
             Id = Guid.NewGuid(),
             CampaignId = campaignId,
             Title = "Active Session",
@@ -157,10 +140,8 @@ public class GameplayServiceTests
             SessionNumber = 1
           }
         },
-        Characters = new List<Character>
-        {
-          new()
-          {
+        Characters = new List<Character> {
+          new() {
             Id = characterId,
             CampaignId = campaignId,
             Name = "Test Character",
@@ -174,8 +155,7 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenCampaignNotFound()
-  {
+  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenCampaignNotFound() {
     ProcessTurnCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Test Message", Guid.NewGuid(), DateTime.UtcNow);
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns((Campaign)null);
 
@@ -185,11 +165,9 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenActiveSessionNotFound()
-  {
+  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenActiveSessionNotFound() {
     ProcessTurnCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Test Message", Guid.NewGuid(), DateTime.UtcNow);
-    Campaign campaign = new()
-    {
+    Campaign campaign = new() {
       Id = command.CampaignId,
       GameMasterUserId = command.UserId,
       GameSystemId = Guid.NewGuid(),
@@ -205,20 +183,16 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenCharacterNotFound()
-  {
+  public async Task ProcessTurnAsync_ShouldThrowNotFoundException_WhenCharacterNotFound() {
     ProcessTurnCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Test Message", Guid.NewGuid(), DateTime.UtcNow);
-    Campaign campaign = new()
-    {
+    Campaign campaign = new() {
       Id = command.CampaignId,
       GameMasterUserId = command.UserId,
       GameSystemId = Guid.NewGuid(),
       Name = "Test Campaign",
       Overview = "Test Overview",
-      Sessions = new List<Session>
-      {
-        new()
-        {
+      Sessions = new List<Session> {
+        new() {
           Id = Guid.NewGuid(),
           CampaignId = command.CampaignId,
           Title = "Active Session",
@@ -238,8 +212,7 @@ public class GameplayServiceTests
   [Theory]
   [MemberData(nameof(EndSessionAsyncSuccessCases))]
   public async Task EndSessionAsync_ShouldEndSession_WhenCampaignAndActiveSessionExist(
-    EndSessionCommand command, Campaign campaign)
-  {
+    EndSessionCommand command, Campaign campaign) {
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns(campaign);
     _aiClient.SummarizeSessionAsync(Arg.Any<Session>()).Returns("Session Summary");
     _aiClient.EmbedTextAsync(Arg.Any<string>()).Returns(new float[] { 1, 2, 3 });
@@ -253,25 +226,20 @@ public class GameplayServiceTests
     await _unitOfWork.Received(1).SaveChangesAsync();
   }
 
-  public static IEnumerable<object[]> EndSessionAsyncSuccessCases()
-  {
+  public static IEnumerable<object[]> EndSessionAsyncSuccessCases() {
     Guid userId = Guid.NewGuid();
     Guid campaignId = Guid.NewGuid();
 
-    yield return new object[]
-    {
+    yield return new object[] {
       new EndSessionCommand(userId, campaignId),
-      new Campaign
-      {
+      new Campaign {
         Id = campaignId,
         GameMasterUserId = userId,
         GameSystemId = Guid.NewGuid(),
         Name = "Test Campaign",
         Overview = "Test Overview",
-        Sessions = new List<Session>
-        {
-          new()
-          {
+        Sessions = new List<Session> {
+          new() {
             Id = Guid.NewGuid(),
             CampaignId = campaignId,
             Title = "Active Session",
@@ -284,8 +252,7 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task EndSessionAsync_ShouldThrowNotFoundException_WhenCampaignNotFound()
-  {
+  public async Task EndSessionAsync_ShouldThrowNotFoundException_WhenCampaignNotFound() {
     EndSessionCommand command = new(Guid.NewGuid(), Guid.NewGuid());
     _campaignRepository.GetByIdAsync(command.CampaignId, command.UserId).Returns((Campaign)null);
 
@@ -295,11 +262,9 @@ public class GameplayServiceTests
   }
 
   [Fact]
-  public async Task EndSessionAsync_ShouldThrowNotFoundException_WhenActiveSessionNotFound()
-  {
+  public async Task EndSessionAsync_ShouldThrowNotFoundException_WhenActiveSessionNotFound() {
     EndSessionCommand command = new(Guid.NewGuid(), Guid.NewGuid());
-    Campaign campaign = new()
-    {
+    Campaign campaign = new() {
       Id = command.CampaignId,
       GameMasterUserId = command.UserId,
       GameSystemId = Guid.NewGuid(),
