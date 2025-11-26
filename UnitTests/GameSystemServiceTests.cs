@@ -8,28 +8,20 @@ using NSubstitute;
 
 namespace UnitTests;
 
-public class GameSystemServiceTests
-{
-  private readonly IAiClient _aiClient;
-  private readonly ISchemaProvider _schemaProvider;
-  private readonly IGameSystemRepository _gameSystemRepository;
-  private readonly IUnitOfWork _unitOfWork;
+public class GameSystemServiceTests {
+  private readonly IAiClient _aiClient = Substitute.For<IAiClient>();
+  private readonly ISchemaProvider _schemaProvider = Substitute.For<ISchemaProvider>();
+  private readonly IGameSystemRepository _gameSystemRepository = Substitute.For<IGameSystemRepository>();
+  private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
   private readonly GameSystemService _sut;
 
-  public GameSystemServiceTests()
-  {
-    _aiClient = Substitute.for<IAiClient>();
-    _schemaProvider = Substitute.for<ISchemaProvider>();
-    _gameSystemRepository = Substitute.for<IGameSystemRepository>();
-    _unitOfWork = Substitute.for<IUnitOfWork>();
+  public GameSystemServiceTests() {
     _sut = new GameSystemService(_aiClient, _schemaProvider, _gameSystemRepository, _unitOfWork);
   }
 
   [Fact]
-  public async Task GetSystemByIdAsync_ShouldReturnGameSystem_WhenGameSystemExists()
-  {
-    GameSystem gameSystem = new()
-    {
+  public async Task GetSystemByIdAsync_ShouldReturnGameSystem_WhenGameSystemExists() {
+    GameSystem gameSystem = new() {
       Id = Guid.NewGuid(),
       Title = "Dungeons & Dragons",
       Overview = "Fantasy role-playing game.",
@@ -45,8 +37,7 @@ public class GameSystemServiceTests
   }
 
   [Fact]
-  public async Task GetSystemByIdAsync_ShouldReturnNull_WhenGameSystemDoesNotExist()
-  {
+  public async Task GetSystemByIdAsync_ShouldReturnNull_WhenGameSystemDoesNotExist() {
     Guid id = Guid.NewGuid();
     _gameSystemRepository.GetByIdAsync(id).Returns((GameSystem?)null);
 
@@ -58,8 +49,7 @@ public class GameSystemServiceTests
   [Theory]
   [InlineData(null, 10)]
   [InlineData("cursor", 5)]
-  public async Task BrowseSystemsAsync_ShouldReturnCursorResult_WhenCalled(string? cursor, int pageSize)
-  {
+  public async Task BrowseSystemsAsync_ShouldReturnCursorResult_WhenCalled(string? cursor, int pageSize) {
     CursorResult<GameSystem> expectedResult = new CursorResult<GameSystem>(new List<GameSystem>(), "nextCursor");
     _gameSystemRepository.GetAllAsync(cursor, pageSize).Returns(expectedResult);
 
@@ -69,10 +59,8 @@ public class GameSystemServiceTests
   }
 
   [Fact]
-  public async Task UploadSystemAsync_ShouldCreateAndReturnGameSystem_WhenCommandIsValid()
-  {
-    GameSystem expectedGameSystem = new()
-    {
+  public async Task UploadSystemAsync_ShouldCreateAndReturnGameSystem_WhenCommandIsValid() {
+    GameSystem expectedGameSystem = new() {
       Title = "Dungeons & Dragons",
       Overview = "Fantasy role-playing game.",
       CharacterSheetSchema = new Dictionary<string, object>(),
@@ -87,8 +75,7 @@ public class GameSystemServiceTests
 
     _schemaProvider.LoadSchemaAsync(command.CharacterSheetSchemaStream, default).Returns(expectedGameSystem.CharacterSheetSchema);
 
-    AiRulebookChunkResponse chunkResponse = new(new[]
-    {
+    AiRulebookChunkResponse chunkResponse = new(new[] {
       new RulebookChunk("Rule 1", RulebookChunkTag.General),
       new RulebookChunk("Rule 2", RulebookChunkTag.CharacterCreation)
     });
@@ -118,10 +105,8 @@ public class GameSystemServiceTests
   }
 
   [Fact]
-  public async Task UploadSystemAsync_ShouldHandleEmptyRulebookStream()
-  {
-    GameSystem expectedGameSystem = new()
-    {
+  public async Task UploadSystemAsync_ShouldHandleEmptyRulebookStream() {
+    GameSystem expectedGameSystem = new() {
       Title = "Dungeons & Dragons",
       Overview = "Fantasy role-playing game.",
       CharacterSheetSchema = new Dictionary<string, object>(),
@@ -151,10 +136,8 @@ public class GameSystemServiceTests
   }
 
   [Fact]
-  public async Task UploadSystemAsync_ShouldHandleNoCharacterCreationGuide()
-  {
-    GameSystem expectedGameSystem = new()
-    {
+  public async Task UploadSystemAsync_ShouldHandleNoCharacterCreationGuide() {
+    GameSystem expectedGameSystem = new() {
       Title = "Dungeons & Dragons",
       Overview = "Fantasy role-playing game.",
       CharacterSheetSchema = new Dictionary<string, object>(),
@@ -169,8 +152,7 @@ public class GameSystemServiceTests
 
     _schemaProvider.LoadSchemaAsync(command.CharacterSheetSchemaStream, default).Returns(expectedGameSystem.CharacterSheetSchema);
 
-    AiRulebookChunkResponse chunkResponse = new(new[]
-    {
+    AiRulebookChunkResponse chunkResponse = new(new[] {
       new RulebookChunk("Rule 1", RulebookChunkTag.General)
     });
     _aiClient.ChunkRulebookAsync(command.RulebookStream, default).Returns(chunkResponse);
