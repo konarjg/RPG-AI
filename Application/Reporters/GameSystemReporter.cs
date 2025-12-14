@@ -11,10 +11,10 @@ public class GameSystemReporter(IGameSystemRepository gameSystemRepository, IGam
 
   public async Task<GameSystem> UploadGameSystemAsync(UploadGameSystemCommand command) {
     AiSplitRulebookResponse splitRulebookResponse = await aiClient.SplitRulebookAsync(new AiSplitRulebookRequest(command.RulebookStream, command.RulebookContentType));
-    List<AiEmbedTextResponse> embeddings = splitRulebookResponse.Entries.Select(r => new AiEmbedTextResponse(new float[3072])).ToList();/*await aiClient.EmbedAllTextsAsync(splitRulebookResponse.Entries
+    List<AiEmbedTextResponse> embeddings = await aiClient.EmbedAllTextsAsync(splitRulebookResponse.Entries
                                                                                                   .Select(entry => entry.Summary)
                                                                                                   .Select(summary => new AiEmbedTextRequest(summary))
-                                                                                                  .ToList());*/
+                                                                                                  .ToList());
     if (splitRulebookResponse.Entries.Count != embeddings.Count) {
       throw new InvalidOperationException(
         $"Embedding mismatch! Sent {splitRulebookResponse.Entries.Count} summaries but received {embeddings.Count} embeddings.");

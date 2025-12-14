@@ -41,6 +41,6 @@ public class RulebookChapterConfig : IEntityTypeConfiguration<RulebookChapter> {
     builder.Property(g => g.Id).ValueGeneratedNever();
     builder.Property(g => g.SummaryEmbedding)
            .HasConversion(v => new Vector(v), v => v.ToArray())
-           .HasColumnType("vector(3072)");
+           .HasColumnType("vector(1024)");
   }
 }
