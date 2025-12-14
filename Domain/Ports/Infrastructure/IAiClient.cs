@@ -1,15 +1,9 @@
-using Domain.Ports.Infrastructure.Dtos;
-
 namespace Domain.Ports.Infrastructure;
 
-using Entities;
+using Dtos;
 
 public interface IAiClient {
-  Task<AiCreateCharacterResponse> CreateCharacterAsync(AiCreateCharacterRequest createCharacterRequest, CancellationToken cancellationToken = default);
-  Task<AiRulebookChunkResponse> ChunkRulebookAsync(Stream rulebookStream,
-    CancellationToken cancellationToken = default);
-  Task<float[]> GenerateRetrievalQueryEmbeddingAsync(string currentEvent, List<CampaignEvent> recentEvents, CancellationToken cancellationToken = default);
-  Task<string> SummarizeSessionAsync(Session session, CancellationToken cancellationToken = default);
-  Task<AiActionResponse> ReactToEventAsync(AiActionRequest actionRequest, CancellationToken cancellationToken = default);
-  Task<float[]> EmbedTextAsync(string text, CancellationToken cancellationToken = default);
+  Task<AiSplitRulebookResponse> SplitRulebookAsync(AiSplitRulebookRequest request);
+  Task<AiEmbedTextResponse> EmbedTextAsync(AiEmbedTextRequest request);
+  Task<List<AiEmbedTextResponse>> EmbedAllTextsAsync(List<AiEmbedTextRequest> request);
 }

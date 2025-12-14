@@ -1,9 +1,6 @@
-﻿namespace Domain.Ports.Infrastructure;
+namespace Domain.Ports.Infrastructure;
 
 public interface ISchemaProvider {
-  Task<Dictionary<string,object>> LoadSchemaAsync(Stream schemaStream,
-    CancellationToken cancellationToken = default);
-
-  void ValidateWithSchema(Dictionary<string,object> data,
-    Dictionary<string,object> schema);
+  Task<Dictionary<string,object>> FetchSchemaAsync(Stream schemaStream);
+  void ValidateContentWithSchema(Dictionary<string,object> content, Dictionary<string, object> schema);
 }

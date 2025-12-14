@@ -1,5 +1,5 @@
-﻿namespace Application.Exceptions;
+namespace Application.Exceptions;
 
-public class SchemaViolationException(string message, List<string> errors) : Exception(message) {
-  public List<string> Errors { get; } = errors;
+public class SchemaViolationException(IList<string> errors) : Exception($"Character sheet schema violated. Errors: {string.Join(Environment.NewLine, errors)}") {
+  
 }
