@@ -15,6 +15,8 @@ services:
       - AiClient__RulebookAgent__ApiKey=${GEMINI_API_KEY}
       - AiClient__EmbeddingAgent__BaseUrl=${CLOUDFLARE_BASE_URL}
       - AiClient__EmbeddingAgent__ApiKey=${CLOUDFLARE_API_KEY}
+      - AiClient__CharacterGenerationAgent__BaseUrl=${CEREBRAS_BASE_URL}
+      - AiClient__CharacterGenerationAgent__ApiKey=${CEREBRAS_API_KEY}
       - ASPNETCORE_URLS=http://+:8080
     depends_on:
       db:

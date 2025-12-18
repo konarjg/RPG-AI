@@ -11,7 +11,7 @@ using Ports.Persistence;
 public class GameSystemFactory(IDateTimeProvider dateTimeProvider, IGuidGenerator guidGenerator) : IGameSystemFactory {
   
   public GameSystem CreateGameSystem(CreateGameSystemCommand command) {
-    Guid id = guidGenerator.GeneradeGuid();
+    Guid id = guidGenerator.GenerateGuid();
     
     GameSystem gameSystem = new() {
       Id = id,
@@ -19,6 +19,7 @@ public class GameSystemFactory(IDateTimeProvider dateTimeProvider, IGuidGenerato
       Title = command.Title,
       Overview = command.Overview,
       CharacterSheetSchema = command.CharacterSheetSchema,
+      CharacterCreationGuide = command.CharacterCreationGuide,
       UploadedAt = dateTimeProvider.GetCurrentDateTime(),
       Chapters = command.ChapterCommands.Select(chapterCommand => CreateChapter(chapterCommand, id)).ToList()
     };
@@ -28,7 +29,7 @@ public class GameSystemFactory(IDateTimeProvider dateTimeProvider, IGuidGenerato
 
   private RulebookChapter CreateChapter(CreateRulebookChapterCommand command, Guid gameSystemId) {
     return new RulebookChapter() {
-      Id = guidGenerator.GeneradeGuid(),
+      Id = guidGenerator.GenerateGuid(),
       GameSystemId = gameSystemId,
       Content = command.Content,
       Summary = command.Summary,

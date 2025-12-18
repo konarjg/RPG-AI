@@ -23,11 +23,12 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
     return Ok(MapResponse(gameSystem));
   }
 
-  [HttpPost("/browse")]
-  public async Task<ActionResult<CursorResult<GameSystemResponse>>> BrowseAsync([FromBody] BrowseGameSystemsRequest request) {
-    BrowseSystemsQuery query = new(request.SearchPhrase, request.PageSize, request.Cursor, null);
+  [HttpGet]
+  public async Task<ActionResult<CursorResult<BrowseGameSystemsResponse>>> BrowseAsync([FromQuery] BrowseGameSystemsRequest request) {
+    BrowseSystemsQuery query = new(request.PageSize, request.SearchPhrase, request.Cursor, null);
     CursorResult<GameSystem> gameSystems = await provider.BrowseGameSystemsAsync(query);
-    CursorResult<GameSystemResponse> response = new(gameSystems.Items.Select(MapResponse).ToList(),gameSystems.NextCursor,gameSystems.HasMoreItems);
+    CursorResult<BrowseGameSystemsResponse> response = new(gameSystems.Items.Select(g => new BrowseGameSystemsResponse(g.Id, g.Title, g.Overview, g.IsPublic))
+                                                                      .ToList(),gameSystems.NextCursor,gameSystems.HasMoreItems);
     
     return Ok(response);
   }
@@ -62,6 +63,7 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
       gameSystem.Title,
       gameSystem.Overview,
       gameSystem.IsPublic,
+      gameSystem.CharacterCreationGuide,
       chapters
     );
 

@@ -1,6 +1,7 @@
 namespace Domain.Ports.Infrastructure;
 
 public interface ISchemaProvider {
-  Task<Dictionary<string,object>> FetchSchemaAsync(Stream schemaStream);
-  void ValidateContentWithSchema(Dictionary<string,object> content, Dictionary<string, object> schema);
+  Task<string> FetchSchemaAsync(Stream schemaStream);
+  Task<string> GenerateClassHierarchyFromSchemaAsync(string schema);
+  void ValidateContentWithSchema(string content, string schema);
 }

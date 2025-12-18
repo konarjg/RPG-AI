@@ -12,6 +12,6 @@ public class GameSystemProvider(IGameSystemRepository gameSystemRepository) : IG
   }
 
   public async Task<CursorResult<GameSystem>> BrowseGameSystemsAsync(BrowseSystemsQuery query) {
-    return await gameSystemRepository.BrowseAsync(query.SearchPhrase,query.PageSize,query.Cursor);
+    return await gameSystemRepository.BrowseAsync(query.PageSize, query.SearchPhrase, query.Cursor, query.OwnerId);
   }
 }

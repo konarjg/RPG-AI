@@ -4,7 +4,7 @@ using Domain.Ports.Infrastructure;
 
 public class GuidGenerator : IGuidGenerator {
 
-  public Guid GeneradeGuid() {
+  public Guid GenerateGuid() {
     return Guid.CreateVersion7();
   }
 }

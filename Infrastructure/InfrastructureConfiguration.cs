@@ -3,6 +3,10 @@ namespace Infrastructure;
 using Domain.Ports.Infrastructure;
 using Domain.Ports.Persistence;
 using Infrastructure;
+using Infrastructure.AiClient;
+using Infrastructure.AiClient.Clients;
+using Infrastructure.AiClient.Clients.Interfaces;
+using Infrastructure.Engine;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,9 +31,15 @@ public static class InfrastructureConfiguration {
     serviceCollection.AddSingleton<IGuidGenerator, GuidGenerator>();
     serviceCollection.AddSingleton<IDateTimeProvider,DateTimeProvider>();
     serviceCollection.AddSingleton<ISchemaProvider,SchemaProvider>();
+    serviceCollection.AddSingleton<IRuleEngine,RoslynRuleEngine>();
 
     serviceCollection.AddScoped<IGameSystemRepository,GameSystemRepository>();
+    serviceCollection.AddScoped<ICampaignRepository,CampaignRepository>();
     serviceCollection.AddScoped<IUnitOfWork,UnitOfWork>();
+    
+    serviceCollection.AddScoped<IRulebookProcessingClient,GeminiRulebookProcessingClient>();
+    serviceCollection.AddScoped<IEmbeddingClient,OpenAiEmbeddingClient>();
+    serviceCollection.AddScoped<ICharacterGenerationClient,OpenAiCharacterGenerationClient>();
     serviceCollection.AddScoped<IAiClient, AiClient>();
 
     return serviceCollection;

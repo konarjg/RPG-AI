@@ -1,3 +1,3 @@
 namespace RpgAI.Controllers.Dtos;
 
-public record BrowseGameSystemsRequest(string SearchPhrase, int PageSize, Guid? Cursor = null);
+public record BrowseGameSystemsRequest(int PageSize, string? SearchPhrase = null, Guid? Cursor = null);

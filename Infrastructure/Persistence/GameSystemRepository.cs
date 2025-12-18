@@ -13,16 +13,17 @@ public class GameSystemRepository(DatabaseContext context) : IGameSystemReposito
                   .FirstOrDefaultAsync(g => g.Id == id);
   }
 
-  public async Task<CursorResult<GameSystem>> BrowseAsync(string searchPhrase,
+  public async Task<CursorResult<GameSystem>> BrowseAsync(
     int pageSize,
-    Guid? cursor = null, Guid? ownerId = null) {
+    string? searchPhrase = null,
+    Guid? cursor = null, 
+    Guid? ownerId = null) {
 
     IQueryable<GameSystem> query = context.GameSystems
-                                          .Include(g => g.Chapters)
                                           .Where(g => g.OwnerId == null || g.OwnerId == ownerId)
-                                          .Where(g => g.Title.Contains(searchPhrase))
+                                          .Where(g => searchPhrase == null || EF.Functions.ILike(g.Title, $"%{searchPhrase}%"))
                                           .OrderByDescending(g => g.Id);
-
+    
     if (cursor is not null) {
       query = query.Where(g => g.Id < cursor);
     }
@@ -30,12 +31,14 @@ public class GameSystemRepository(DatabaseContext context) : IGameSystemReposito
     List<GameSystem> items = await query.Take(pageSize + 1).ToListAsync();
 
     bool hasMoreItems = items.Count > pageSize;
+    Guid? nextCursor = null;
 
     if (hasMoreItems) {
       items.RemoveAt(items.Count - 1);
+      nextCursor = items.LastOrDefault()?.Id;
     }
     
-    return new CursorResult<GameSystem>(items, items.LastOrDefault()?.Id, hasMoreItems);
+    return new CursorResult<GameSystem>(items, nextCursor, hasMoreItems);
   }
   
   public void Add(GameSystem gameSystem) {

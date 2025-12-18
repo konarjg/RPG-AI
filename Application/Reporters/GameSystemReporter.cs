@@ -28,9 +28,9 @@ public class GameSystemReporter(IGameSystemRepository gameSystemRepository, IGam
                                                                                           g.First.Summary,g.Second.Embedding))
                                                                                       .ToList();
 
-    Dictionary<string,object> characterSheetSchema = await schemaProvider.FetchSchemaAsync(command.CharacterSheetSchemaStream);
+    string characterSheetSchema = await schemaProvider.FetchSchemaAsync(command.CharacterSheetSchemaStream);
 
-    CreateGameSystemCommand createGameSystemCommand = new(command.Title,command.Overview,command.UserId,characterSheetSchema,rulebookChapterCommands);
+    CreateGameSystemCommand createGameSystemCommand = new(command.Title,command.Overview,command.UserId,characterSheetSchema,splitRulebookResponse.CharacterCreationGuide,rulebookChapterCommands);
     
     GameSystem gameSystem = gameSystemFactory.CreateGameSystem(createGameSystemCommand);
 

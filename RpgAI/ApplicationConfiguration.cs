@@ -10,12 +10,16 @@ public static class ApplicationConfiguration {
     serviceCollection.AddDomain();
     serviceCollection.AddScoped<IGameSystemProvider,GameSystemProvider>();
     serviceCollection.AddScoped<IGameSystemReporter,GameSystemReporter>();
+    serviceCollection.AddScoped<ICharacterReporter,CharacterReporter>();
+    serviceCollection.AddScoped<ICampaignReporter, CampaignReporter>();
 
     return serviceCollection;
   }
   
   private static IServiceCollection AddDomain(this IServiceCollection serviceCollection) {
     serviceCollection.AddScoped<IGameSystemFactory,GameSystemFactory>();
+    serviceCollection.AddScoped<ICampaignFactory, CampaignFactory>();
+    serviceCollection.AddScoped<ICharacterFactory, CharacterFactory>();
     return serviceCollection;
   }
 }
