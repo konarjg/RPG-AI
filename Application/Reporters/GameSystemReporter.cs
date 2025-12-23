@@ -6,6 +6,7 @@ using Domain.Ports.Infrastructure;
 using Domain.Ports.Infrastructure.Dtos;
 using Domain.Ports.Persistence;
 using Domain.Factories.Interfaces;
+using Interfaces;
 
 public class GameSystemReporter(IGameSystemRepository gameSystemRepository, IGameSystemFactory gameSystemFactory, IAiClient aiClient, ISchemaProvider schemaProvider, IUnitOfWork unitOfWork) : IGameSystemReporter {
 

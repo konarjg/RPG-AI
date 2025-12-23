@@ -7,32 +7,33 @@ using Domain.Ports.Infrastructure;
 using Domain.Ports.Infrastructure.Dtos;
 using Domain.Ports.Persistence;
 using Exceptions;
+using Interfaces;
+using Util;
+using Util.Interfaces;
 
-public class CharacterReporter(ICharacterFactory characterFactory, IAiClient aiClient, ISchemaProvider schemaProvider, IRuleEngine ruleEngine) : ICharacterReporter {
+public class CharacterReporter(ICampaignRepository campaignRepository, IUnitOfWork unitOfWork, ICharacterFactory characterFactory, ICharacterGenerationService characterGenerationService) : ICharacterReporter {
 
+  public async Task<Character> GenerateCharacterAsync(AutoGenerateCharacterCommand command) {
+    return await GenerateAsync(command.Campaign,command.GameSystem,command.Concept);
+  }
+  
   public async Task<Character> GenerateCharacterAsync(GenerateCharacterCommand command) {
-    string schemaClasses = await schemaProvider.GenerateClassHierarchyFromSchemaAsync(command.GameSystem.CharacterSheetSchema);
+    Campaign campaign = await campaignRepository.GetCampaignDetailsAsync(command.CampaignId,command.OwnerId) 
+                        ?? throw new NotFoundException<Campaign>(command.CampaignId);
     
-    AiGenerateCharacterRequest request = new(
-      command.Campaign.Overview,
-      command.GameSystem.CharacterCreationGuide,
-      schemaClasses,
-      command.Concept);
-
-    AiGenerateCharacterResponse response = await aiClient.GenerateCharacterAsync(request);
-                                           
-    RuleContext context = new() {
-      CharacterSheet = "",
-      CharacterSheetSchema = command.GameSystem.CharacterSheetSchema,
-      CharacterCreationRule =  response.CharacterCreationRule,
-      SchemaClasses = schemaClasses
-    };
-    
-    RuleExecutionResult result = await ruleEngine.ExecuteRuleAsync(context);
-    schemaProvider.ValidateContentWithSchema(result.FinalCharacterSheet, command.GameSystem.CharacterSheetSchema);
-
-    Character character = characterFactory.CreateCharacter(new CreateCharacterCommand(command.Campaign.Id, response.Name,response.Overview,result.FinalCharacterSheet));
+    Character character = await GenerateAsync(campaign,campaign.GameSystem,command.Concept);
+    await unitOfWork.SaveChangesAsync();
     
     return character;
+  }
+
+  private async Task<Character> GenerateAsync(Campaign campaign, GameSystem gameSystem, string? concept = null) {
+    CharacterGenerationResult result = await characterGenerationService.GenerateCharacterAsync(campaign,  gameSystem, concept);
+    
+    return characterFactory.CreateCharacter(new CreateCharacterCommand(
+      campaign.Id, 
+      result.GenerateCharacterResponse.Name,
+      result.GenerateCharacterResponse.Overview,
+      result.RuleExecutionResult.FinalCharacterSheet));
   }
 }

@@ -2,16 +2,19 @@ namespace RpgAI.Controllers;
 
 using Application.Exceptions;
 using Application.Providers;
+using Application.Providers.Interfaces;
 using Application.Reporters;
+using Application.Reporters.Interfaces;
 using Domain.Dtos;
 using Domain.Entities;
 using Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route(GameSystemRoutes.Base)]
 public class GameSystemsController(IGameSystemProvider provider, IGameSystemReporter reporter) : ControllerBase {
-  [HttpGet("{id}")]
+  [HttpGet(GameSystemRoutes.Get)]
+  [ActionName(nameof(GetAsync))]
   public async Task<ActionResult<GameSystemResponse>> GetAsync(Guid id) {
     GetSystemQuery query = new(id,null);
     GameSystem? gameSystem = await provider.GetGameSystemByIdAsync(query);
@@ -23,7 +26,7 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
     return Ok(MapResponse(gameSystem));
   }
 
-  [HttpGet]
+  [HttpGet(GameSystemRoutes.Browse)]
   public async Task<ActionResult<CursorResult<BrowseGameSystemsResponse>>> BrowseAsync([FromQuery] BrowseGameSystemsRequest request) {
     BrowseSystemsQuery query = new(request.PageSize, request.SearchPhrase, request.Cursor, null);
     CursorResult<GameSystem> gameSystems = await provider.BrowseGameSystemsAsync(query);
@@ -33,7 +36,7 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
     return Ok(response);
   }
 
-  [HttpPost]
+  [HttpPost(GameSystemRoutes.Upload)]
   [Consumes("multipart/form-data")] 
   public async Task<ActionResult<GameSystemResponse>> UploadAsync([FromForm] UploadGameSystemRequest request,
     IFormFile rulebookFile,
@@ -45,8 +48,7 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
     UploadGameSystemCommand command = new(request.Title,request.Overview,rulebookStream, rulebookFile.ContentType,schemaStream);
     GameSystem gameSystem = await reporter.UploadGameSystemAsync(command);
 
-    return Ok(
-      MapResponse(gameSystem));
+    return CreatedAtAction(nameof(GetAsync), new { id = gameSystem.Id }, MapResponse(gameSystem));
   }
 
   private GameSystemResponse MapResponse(GameSystem gameSystem) {

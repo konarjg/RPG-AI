@@ -16,6 +16,7 @@ public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbCont
   public DbSet<RulebookChapter> RulebookChapters { get; set; }
   public DbSet<Campaign> Campaigns { get; set; }
   public DbSet<Character> Characters { get; set; }
+  public DbSet<User> Users { get; set; }
 
   protected override void OnModelCreating(ModelBuilder builder) {
     base.OnModelCreating(builder);
@@ -69,6 +70,11 @@ public class CampaignConfig : IEntityTypeConfiguration<Campaign> {
     builder.ToTable($"{nameof(Campaign)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
+
+    builder.HasOne(g => g.Owner)
+           .WithMany(g => g.Campaigns)
+           .HasForeignKey(g => g.OwnerId)
+           .IsRequired();
     
     builder.HasOne(g => g.GameSystem)
            .WithMany(g => g.Campaigns)
@@ -117,5 +123,13 @@ public class CharacterConfig : IEntityTypeConfiguration<Character> {
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
     builder.Property(g => g.State).HasColumnType("jsonb");
+  }
+}
+
+public class UserConfig : IEntityTypeConfiguration<User> {
+
+  public void Configure(EntityTypeBuilder<User> builder) {
+    builder.ToTable($"{nameof(User)}s");
+    builder.HasKey(u => u.Id);
   }
 }

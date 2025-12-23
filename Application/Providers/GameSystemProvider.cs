@@ -4,6 +4,7 @@ using Domain.Dtos;
 using Domain.Entities;
 using Domain.Ports.Persistence;
 using Exceptions;
+using Interfaces;
 
 public class GameSystemProvider(IGameSystemRepository gameSystemRepository) : IGameSystemProvider {
 

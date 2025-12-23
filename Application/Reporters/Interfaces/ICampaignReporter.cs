@@ -1,4 +1,4 @@
-namespace Application.Reporters;
+namespace Application.Reporters.Interfaces;
 
 using Domain.Entities;
 

@@ -1,7 +1,11 @@
 namespace RpgAI;
 
 using Application.Providers;
+using Application.Providers.Interfaces;
 using Application.Reporters;
+using Application.Reporters.Interfaces;
+using Application.Util;
+using Application.Util.Interfaces;
 using Domain.Factories;
 using Domain.Factories.Interfaces;
 
@@ -10,7 +14,10 @@ public static class ApplicationConfiguration {
     serviceCollection.AddDomain();
     serviceCollection.AddScoped<IGameSystemProvider,GameSystemProvider>();
     serviceCollection.AddScoped<IGameSystemReporter,GameSystemReporter>();
+    serviceCollection.AddSingleton<ICharacterGenerationService, CharacterGenerationService>();
+    serviceCollection.AddScoped<ICharacterProvider, CharacterProvider>();
     serviceCollection.AddScoped<ICharacterReporter,CharacterReporter>();
+    serviceCollection.AddScoped<ICampaignProvider,CampaignProvider>();
     serviceCollection.AddScoped<ICampaignReporter, CampaignReporter>();
 
     return serviceCollection;

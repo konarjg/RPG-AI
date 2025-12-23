@@ -1,3 +1,4 @@
+using Domain.Entities;
 using Infrastructure;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,17 @@ try {
   using (var scope = app.Services.CreateScope()) {
     DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     await dbContext.Database.MigrateAsync();
+
+    Guid id = Guid.AllBitsSet;
+    
+    User test = new() {
+      Id = id
+    };
+
+    if (!(await dbContext.Users.AnyAsync(u => u.Id == id))) {
+      dbContext.Users.Add(test);
+      await dbContext.SaveChangesAsync();
+    }
   }
   
   Console.WriteLine("Database migrations applied successfully.");

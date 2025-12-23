@@ -1,4 +1,4 @@
-namespace Application.Providers;
+namespace Application.Providers.Interfaces;
 
 using Domain.Dtos;
 using Domain.Entities;
