@@ -3,7 +3,7 @@ namespace Infrastructure.Infrastructure.AiClient.Clients;
 using System.ClientModel;
 using System.ClientModel.Primitives;
 using System.Diagnostics.CodeAnalysis;
-using Application.Exceptions;
+using Domain.Exceptions;
 using Domain.Ports.Infrastructure.Dtos;
 using Google.GenAI.Types;
 using Interfaces;
@@ -20,6 +20,7 @@ using Util;
 using File = System.IO.File;
 using JsonSchema = NJsonSchema.JsonSchema;
 using System.Diagnostics;
+using Application.Exceptions;
 using global::Infrastructure.Diagnostics;
 
 public class OpenAiCharacterGenerationClient : ICharacterGenerationClient {

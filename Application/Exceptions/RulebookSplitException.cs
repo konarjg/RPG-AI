@@ -1,5 +1,6 @@
 namespace Application.Exceptions;
 
-public class RulebookSplitException(string message) : Exception(message) {
-  
+public class RulebookSplitException(string message) : Exception(message)
+{
+
 }

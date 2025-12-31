@@ -5,11 +5,14 @@ using Domain.Entities;
 using Domain.Ports.Infrastructure.Dtos;
 
 
-public static class GameSystemMapper {
+public static class GameSystemMapper
+{
 
-  public static CreateGameSystemCommand ToCommand(string title, string overview, Guid userId, string characterSheetSchema, AiSplitRulebookResponse splitResponse, List<AiEmbedTextResponse> embeddings) {
-    if (splitResponse.Entries.Count != embeddings.Count) {
-       throw new InvalidOperationException($"Embedding mismatch! Sent {splitResponse.Entries.Count} summaries but received {embeddings.Count} embeddings.");
+  public static CreateGameSystemCommand ToCommand(string title, string overview, Guid userId, string characterSheetSchema, AiSplitRulebookResponse splitResponse, List<AiEmbedTextResponse> embeddings)
+  {
+    if (splitResponse.Entries.Count != embeddings.Count)
+    {
+      throw new InvalidOperationException($"Embedding mismatch! Sent {splitResponse.Entries.Count} summaries but received {embeddings.Count} embeddings.");
     }
 
     List<CreateRulebookChapterCommand> chapters = splitResponse.Entries

@@ -8,8 +8,12 @@ public class Campaign {
   public required Guid GameSystemId { get; set; }
   public required DateTime StartedAt { get; set; }
   
+  public int? LastSessionNumber { get; set; }
+  public Guid? CurrentSessionId { get; set; }
+  
   public virtual User Owner { get; set; }
   public virtual GameSystem GameSystem { get; set; }
+  public virtual Session CurrentSession { get; set; }
   public virtual List<Session> Sessions { get; set; } = new();
   public virtual List<Character> Characters { get; set; } = new();
 }

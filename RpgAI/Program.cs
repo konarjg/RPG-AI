@@ -3,6 +3,7 @@ using Infrastructure;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using RpgAI;
+using RpgAI.Middleware;
 
 using Serilog;
 
@@ -14,7 +15,8 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers()
-       .AddNewtonsoftJson(options => {
+       .AddNewtonsoftJson(options =>
+       {
          options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
        });
 
@@ -25,39 +27,46 @@ builder.Services.AddSwaggerGenNewtonsoftSupport();
 
 WebApplication app = builder.Build();
 
-try {
+try
+{
   Console.WriteLine("Applying database migrations...");
-  
-  using (IServiceScope scope = app.Services.CreateScope()) {
+
+  using (IServiceScope scope = app.Services.CreateScope())
+  {
     DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     await dbContext.Database.MigrateAsync();
 
     Guid id = Guid.AllBitsSet;
-    
-    User test = new() {
+
+    User test = new()
+    {
       Id = id
     };
 
-    if (!(await dbContext.Users.AnyAsync(u => u.Id == id))) {
+    if (!await dbContext.Users.AnyAsync(u => u.Id == id))
+    {
       dbContext.Users.Add(test);
       await dbContext.SaveChangesAsync();
     }
   }
-  
+
   Console.WriteLine("Database migrations applied successfully.");
 }
-catch (Exception ex) {
+catch (Exception ex)
+{
   Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
   Environment.Exit(1);
 }
 
 
 app.UseSwagger();
-app.UseSwaggerUI(); 
+app.UseSwaggerUI();
 
-app.UseSerilogRequestLogging(); 
+app.UseSerilogRequestLogging();
 
-app.UseRouting(); 
+app.UseGlobalExceptionHandler();
+
+app.UseRouting();
 app.MapControllers();
 
 //app.UseHttpsRedirection();

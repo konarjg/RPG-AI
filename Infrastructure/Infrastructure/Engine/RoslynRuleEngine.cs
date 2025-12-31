@@ -45,7 +45,7 @@ public class RoslynRuleEngine(ILogger<RoslynRuleEngine> logger) : IRuleEngine {
     ";
 
       CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-      cts.CancelAfter(TimeSpan.FromSeconds(10)); // Enforce 10 second timeout (increased for Docker stability)
+      cts.CancelAfter(TimeSpan.FromSeconds(10)); 
   
       using Activity? activity = RpgAiActivitySource.Instance.StartActivity("ExecuteRule");
       activity?.SetTag("code.content", rule);

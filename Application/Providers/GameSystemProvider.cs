@@ -3,16 +3,20 @@ namespace Application.Providers;
 using Domain.Dtos;
 using Domain.Entities;
 using Domain.Ports.Persistence;
-using Exceptions;
+using Domain.Exceptions;
 using Interfaces;
+using Application.Providers.Queries;
 
-public class GameSystemProvider(IGameSystemRepository gameSystemRepository) : IGameSystemProvider {
+public class GameSystemProvider(IGameSystemRepository gameSystemRepository) : IGameSystemProvider
+{
 
-  public async Task<GameSystem?> GetGameSystemByIdAsync(GetSystemQuery query) {
-    return await gameSystemRepository.GetByIdAsync(query.Id,query.OwnerId);
+  public async Task<GameSystem?> GetGameSystemByIdAsync(GetSystemQuery query)
+  {
+    return await gameSystemRepository.GetByIdAsync(query.Id, query.OwnerId);
   }
 
-  public async Task<CursorResult<GameSystem>> BrowseGameSystemsAsync(BrowseSystemsQuery query) {
+  public async Task<CursorResult<GameSystem>> BrowseGameSystemsAsync(BrowseSystemsQuery query)
+  {
     return await gameSystemRepository.BrowseAsync(query.PageSize, query.SearchPhrase, query.Cursor, query.OwnerId);
   }
 }

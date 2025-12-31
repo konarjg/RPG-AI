@@ -14,19 +14,14 @@ public interface ICampaignRepository {
   
   Task<CursorResult<Character>> BrowseCharactersAsync(
       int pageSize, 
-      Guid campaignId,
+      Guid id,
       Guid ownerId,
       Guid? cursor = null);
   
-  Task<Character?> GetCharacterByIdAsync(Guid campaignId, Guid characterId, Guid ownerId);
-  
-  Task<CursorResult<Session>> BrowseSessionsAsync(
-      int pageSize, 
-      Guid campaignId, 
-      Guid ownerId,
-      DateTime? cursor = null);
+  Task<Character?> GetCharacterByIdAsync(Guid id, Guid characterId, Guid ownerId);
+
+  Task<Session?> GetCurrentSessionAsync(Guid id, Guid ownerId);
   
   void AddCampaign(Campaign campaign);
-  void AddSession(Session session);
   void AddCharacter(Character character);
 }

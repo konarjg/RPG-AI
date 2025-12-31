@@ -19,6 +19,8 @@ public static class ApplicationConfiguration {
     serviceCollection.AddScoped<ICharacterReporter,CharacterReporter>();
     serviceCollection.AddScoped<ICampaignProvider,CampaignProvider>();
     serviceCollection.AddScoped<ICampaignReporter, CampaignReporter>();
+    serviceCollection.AddScoped<ISessionProvider,SessionProvider>();
+    serviceCollection.AddScoped<ISessionReporter,SessionReporter>();
 
     return serviceCollection;
   }
@@ -27,6 +29,8 @@ public static class ApplicationConfiguration {
     serviceCollection.AddScoped<IGameSystemFactory,GameSystemFactory>();
     serviceCollection.AddScoped<ICampaignFactory, CampaignFactory>();
     serviceCollection.AddScoped<ICharacterFactory, CharacterFactory>();
+    serviceCollection.AddScoped<ISessionFactory,SessionFactory>();
+    
     return serviceCollection;
   }
 }

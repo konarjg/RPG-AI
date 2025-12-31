@@ -29,8 +29,14 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("CurrentSessionId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("GameSystemId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("LastSessionNumber")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Overview")
                         .IsRequired()
@@ -47,6 +53,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CurrentSessionId")
+                        .IsUnique();
 
                     b.HasIndex("GameSystemId");
 
@@ -154,12 +163,52 @@ namespace Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Domain.Entities.Scene", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SceneNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text");
+
+                    b.Property<Vector>("SummaryEmbedding")
+                        .HasColumnType("vector(1024)");
+
+                    b.Property<Vector>("SummaryEmbeddingVector")
+                        .HasColumnType("vector")
+                        .HasColumnName("SummaryEmbedding");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("SummaryEmbedding");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SummaryEmbedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("SummaryEmbedding"), new[] { "vector_cosine_ops" });
+
+                    b.ToTable("Scenes", null, t =>
+                        {
+                            t.Property("SummaryEmbedding")
+                                .HasColumnName("SummaryEmbedding1");
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Session", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("CampaignId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CurrentSceneId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("SessionNumber")
@@ -178,6 +227,9 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CampaignId");
+
+                    b.HasIndex("CurrentSceneId")
+                        .IsUnique();
 
                     b.HasIndex("SummaryEmbedding");
 
@@ -204,6 +256,10 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Campaign", b =>
                 {
+                    b.HasOne("Domain.Entities.Session", "CurrentSession")
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.Campaign", "CurrentSessionId");
+
                     b.HasOne("Domain.Entities.GameSystem", "GameSystem")
                         .WithMany("Campaigns")
                         .HasForeignKey("GameSystemId")
@@ -215,6 +271,8 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("CurrentSession");
 
                     b.Navigation("GameSystem");
 
@@ -243,6 +301,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("GameSystem");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Scene", b =>
+                {
+                    b.HasOne("Domain.Entities.Session", "Session")
+                        .WithMany("Scenes")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("Domain.Entities.Session", b =>
                 {
                     b.HasOne("Domain.Entities.Campaign", "Campaign")
@@ -251,7 +320,13 @@ namespace Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Domain.Entities.Scene", "CurrentScene")
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.Session", "CurrentSceneId");
+
                     b.Navigation("Campaign");
+
+                    b.Navigation("CurrentScene");
                 });
 
             modelBuilder.Entity("Domain.Entities.Campaign", b =>
@@ -266,6 +341,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("Campaigns");
 
                     b.Navigation("Chapters");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Session", b =>
+                {
+                    b.Navigation("Scenes");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>

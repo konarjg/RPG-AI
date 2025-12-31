@@ -1,28 +1,41 @@
 namespace RpgAI.Controllers;
 
-using Application.Providers;
+using Application.Reporters.Commands;
+
+using Application.Providers.Queries;
 using Application.Providers.Interfaces;
 using Application.Reporters;
 using Application.Reporters.Interfaces;
 using Domain.Dtos;
-using Domain.Entities;using Domain.Ports.Infrastructure;
+using Domain.Entities;
+using Domain.Ports.Infrastructure;
+using Domain.Exceptions;
 using Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using RpgAI.Mappers;
 
 [ApiController]
 [Route(CampaignRoutes.Base)]
-public class CampaignsController(ICampaignReporter campaignReporter,ICampaignProvider campaignProvider) : ControllerBase {
+public class CampaignsController(ICampaignReporter campaignReporter, ICampaignProvider campaignProvider) : ControllerBase
+{
 
   [HttpGet(CampaignRoutes.Get)]
-  public async Task<ActionResult<CampaignResponse>> GetCampaignDetailsAsync(Guid id) {
-    Campaign? campaign = await campaignProvider.GetCampaignDetailsAsync(new GetCampaignQuery(id,Guid.AllBitsSet));
-    
-    return campaign is not null ? Ok(MapResponse(campaign)) : NotFound();
+  public async Task<ActionResult<CampaignResponse>> GetCampaignDetailsAsync(Guid id)
+  {
+    Campaign? campaign = await campaignProvider.GetCampaignDetailsAsync(new GetCampaignQuery(id, Guid.AllBitsSet));
+
+    if (campaign is null)
+    {
+      throw new NotFoundException<Campaign>(id);
+    }
+
+    return Ok(CampaignApiMapper.ToResponse(campaign));
   }
 
   [HttpGet(CampaignRoutes.Browse)]
-  public async Task<ActionResult<CursorResult<CampaignResponse>>> BrowseCampaignsAsync([FromQuery] BrowseCampaignsRequest request) {
+  public async Task<ActionResult<CursorResult<CampaignResponse>>> BrowseCampaignsAsync([FromQuery] BrowseCampaignsRequest request)
+  {
     BrowseCampaignsQuery query = new(
       request.PageSize,
       request.OwnerId,
@@ -33,14 +46,15 @@ public class CampaignsController(ICampaignReporter campaignReporter,ICampaignPro
 
     return Ok(new CursorResult<CampaignResponse>(
       campaigns
-        .Items.Select(MapResponse)
+        .Items.Select(CampaignApiMapper.ToResponse)
         .ToList(),
       campaigns.NextCursor,
       campaigns.HasMoreItems));
   }
 
   [HttpPost(CampaignRoutes.Start)]
-  public async Task<ActionResult<CampaignResponse>> StartAsync([FromBody] StartCampaignRequest request) {
+  public async Task<ActionResult<CampaignResponse>> StartAsync([FromBody] StartCampaignRequest request)
+  {
     StartCampaignCommand command = new StartCampaignCommand(
       Guid.AllBitsSet, //Temporary user
       request.Title,
@@ -50,11 +64,7 @@ public class CampaignsController(ICampaignReporter campaignReporter,ICampaignPro
 
     Campaign campaign = await campaignReporter.StartCampaignAsync(command);
 
-    return Ok(MapResponse(campaign));
-  }
-
-  private CampaignResponse MapResponse(Campaign campaign) {
-    return new CampaignResponse(campaign.Id,campaign.Title,campaign.Overview,campaign.GameSystemId,campaign.StartedAt);
+    return Ok(CampaignApiMapper.ToResponse(campaign));
   }
 
 }

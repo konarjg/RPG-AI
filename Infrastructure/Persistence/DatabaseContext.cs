@@ -11,27 +11,33 @@ using Newtonsoft.Json;
 using Npgsql;
 using Pgvector;
 
-public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options) {
+public class DatabaseContext(DbContextOptions<DatabaseContext> options) : DbContext(options)
+{
   public DbSet<GameSystem> GameSystems { get; set; }
   public DbSet<RulebookChapter> RulebookChapters { get; set; }
   public DbSet<Campaign> Campaigns { get; set; }
   public DbSet<Character> Characters { get; set; }
   public DbSet<User> Users { get; set; }
+  public DbSet<Session> Sessions { get; set; }
+  public DbSet<Scene> Scenes { get; set; }
 
-  protected override void OnModelCreating(ModelBuilder builder) {
+  protected override void OnModelCreating(ModelBuilder builder)
+  {
     base.OnModelCreating(builder);
     builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
     builder.HasPostgresExtension("vector");
   }
 }
 
-public class GameSystemConfig : IEntityTypeConfiguration<GameSystem> {
+public class GameSystemConfig : IEntityTypeConfiguration<GameSystem>
+{
 
-  public void Configure(EntityTypeBuilder<GameSystem> builder) {
+  public void Configure(EntityTypeBuilder<GameSystem> builder)
+  {
     builder.ToTable($"{nameof(GameSystem)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
-    
+
     builder.HasMany(g => g.Chapters)
            .WithOne(c => c.GameSystem)
            .HasForeignKey(c => c.GameSystemId)
@@ -41,32 +47,36 @@ public class GameSystemConfig : IEntityTypeConfiguration<GameSystem> {
   }
 }
 
-public class RulebookChapterConfig : IEntityTypeConfiguration<RulebookChapter> {
+public class RulebookChapterConfig : IEntityTypeConfiguration<RulebookChapter>
+{
 
-  public void Configure(EntityTypeBuilder<RulebookChapter> builder) {
+  public void Configure(EntityTypeBuilder<RulebookChapter> builder)
+  {
     builder.ToTable($"{nameof(RulebookChapter)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
-    
+
     builder.Property(g => g.SummaryEmbedding)
            .HasConversion(v => new Vector(v), v => v.ToArray())
            .HasColumnType("vector(1024)")
            .Metadata.SetValueComparer(new ValueComparer<float[]>(
              (v1, v2) => v1.SequenceEqual(v2),
-             v => v.GetHashCode()       
+             v => v.GetHashCode()
            ));
-    
+
     builder.Property<Vector>($"{nameof(RulebookChapter.SummaryEmbedding)}{nameof(Vector)}").HasColumnName(nameof(RulebookChapter.SummaryEmbedding));
-    
+
     builder.HasIndex(c => c.SummaryEmbedding)
            .HasMethod("hnsw")
            .HasOperators("vector_cosine_ops");
   }
 }
 
-public class CampaignConfig : IEntityTypeConfiguration<Campaign> {
+public class CampaignConfig : IEntityTypeConfiguration<Campaign>
+{
 
-  public void Configure(EntityTypeBuilder<Campaign> builder) {
+  public void Configure(EntityTypeBuilder<Campaign> builder)
+  {
     builder.ToTable($"{nameof(Campaign)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
@@ -75,12 +85,12 @@ public class CampaignConfig : IEntityTypeConfiguration<Campaign> {
            .WithMany(g => g.Campaigns)
            .HasForeignKey(g => g.OwnerId)
            .IsRequired();
-    
+
     builder.HasOne(g => g.GameSystem)
            .WithMany(g => g.Campaigns)
            .HasForeignKey(g => g.GameSystemId)
            .IsRequired();
-    
+
     builder.HasMany(g => g.Characters)
            .WithOne(g => g.Campaign)
            .HasForeignKey(g => g.CampaignId)
@@ -90,35 +100,79 @@ public class CampaignConfig : IEntityTypeConfiguration<Campaign> {
            .WithOne(g => g.Campaign)
            .HasForeignKey(g => g.CampaignId)
            .IsRequired();
+
+    builder.HasOne(g => g.CurrentSession)
+           .WithOne()
+           .HasForeignKey<Campaign>(g => g.CurrentSessionId)
+           .IsRequired(false);
   }
 }
 
-public class SessionConfig : IEntityTypeConfiguration<Session> {
+public class SessionConfig : IEntityTypeConfiguration<Session>
+{
 
-  public void Configure(EntityTypeBuilder<Session> builder) {
+  public void Configure(EntityTypeBuilder<Session> builder)
+  {
     builder.ToTable($"{nameof(Session)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
-    
+
     builder.Property(g => g.SummaryEmbedding)
            .HasConversion(v => new Vector(v), v => v.ToArray())
            .HasColumnType("vector(1024)")
            .Metadata.SetValueComparer(new ValueComparer<float[]>(
              (v1, v2) => v1.SequenceEqual(v2),
-             v => v.GetHashCode()       
+             v => v.GetHashCode()
            ));
-    
+
     builder.Property<Vector>($"{nameof(Session.SummaryEmbedding)}{nameof(Vector)}").HasColumnName(nameof(Session.SummaryEmbedding));
-    
+
+    builder.HasIndex(c => c.SummaryEmbedding)
+           .HasMethod("hnsw")
+           .HasOperators("vector_cosine_ops");
+
+    builder.HasMany(c => c.Scenes)
+    .WithOne(c => c.Session)
+    .HasForeignKey(c => c.SessionId)
+    .IsRequired();
+
+    builder.HasOne(c => c.CurrentScene)
+    .WithOne()
+    .HasForeignKey<Session>(c => c.CurrentSceneId)
+    .IsRequired(false);
+  }
+}
+
+public class SceneConfig : IEntityTypeConfiguration<Scene>
+{
+
+  public void Configure(EntityTypeBuilder<Scene> builder)
+  {
+    builder.ToTable($"{nameof(Scene)}s");
+    builder.HasKey(g => g.Id);
+    builder.Property(g => g.Id).ValueGeneratedNever();
+
+    builder.Property(g => g.SummaryEmbedding)
+           .HasConversion(v => new Vector(v), v => v.ToArray())
+           .HasColumnType("vector(1024)")
+           .Metadata.SetValueComparer(new ValueComparer<float[]>(
+             (v1, v2) => v1.SequenceEqual(v2),
+             v => v.GetHashCode()
+           ));
+
+    builder.Property<Vector>($"{nameof(Scene.SummaryEmbedding)}{nameof(Vector)}").HasColumnName(nameof(Scene.SummaryEmbedding));
+
     builder.HasIndex(c => c.SummaryEmbedding)
            .HasMethod("hnsw")
            .HasOperators("vector_cosine_ops");
   }
 }
 
-public class CharacterConfig : IEntityTypeConfiguration<Character> {
+public class CharacterConfig : IEntityTypeConfiguration<Character>
+{
 
-  public void Configure(EntityTypeBuilder<Character> builder) {
+  public void Configure(EntityTypeBuilder<Character> builder)
+  {
     builder.ToTable($"{nameof(Character)}s");
     builder.HasKey(g => g.Id);
     builder.Property(g => g.Id).ValueGeneratedNever();
@@ -126,9 +180,11 @@ public class CharacterConfig : IEntityTypeConfiguration<Character> {
   }
 }
 
-public class UserConfig : IEntityTypeConfiguration<User> {
+public class UserConfig : IEntityTypeConfiguration<User>
+{
 
-  public void Configure(EntityTypeBuilder<User> builder) {
+  public void Configure(EntityTypeBuilder<User> builder)
+  {
     builder.ToTable($"{nameof(User)}s");
     builder.HasKey(u => u.Id);
   }

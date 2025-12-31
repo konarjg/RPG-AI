@@ -3,6 +3,7 @@ namespace Infrastructure.Infrastructure;
 using System.Text;
 using System.Text.RegularExpressions;
 using Application.Exceptions;
+using Domain.Exceptions;
 using Domain.Ports.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

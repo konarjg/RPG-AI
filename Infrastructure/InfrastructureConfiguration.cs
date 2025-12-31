@@ -35,6 +35,7 @@ public static class InfrastructureConfiguration {
 
     serviceCollection.AddScoped<IGameSystemRepository,GameSystemRepository>();
     serviceCollection.AddScoped<ICampaignRepository,CampaignRepository>();
+    serviceCollection.AddScoped<ISessionRepository,SessionRepository>();
     serviceCollection.AddScoped<IUnitOfWork,UnitOfWork>();
     
     serviceCollection.AddScoped<IRulebookProcessingClient,GeminiRulebookProcessingClient>();
