@@ -33,6 +33,13 @@ The scripting engine provided to you exposes the following tools:
 5. Standard C# syntax: control flow operators, assignment operators, mathematical and logical operators
 6. **CRUCIAL RULE 1**: You must *always* initialize *all* objects and collections before setting their fields or adding new items to avoid NullReferenceException.
 7. **CRUCIAL RULE 2**: You must not perform any math yourself, always use explicit C# code in your script to ensure determinism.
+8. **CRUCIAL RULE 3**: The C# script you generate will be placed inside a JSON string. Therefore, you must correctly escape quotes for both C# and JSON. When a C# string contains double quotes, escape them with a single backslash (`\"`). The JSON format will require this to be written as a double backslash (`\\\"`).
+
+   **Correct JSON Output for the script:**
+   `"CharacterCreationRule": "CharacterState.CharacterInfo.Name = \"Marlon \\\"Six Shots\\\" Kravitz\";"`
+
+   **Incorrect Output:**
+   `"CharacterCreationRule": "CharacterState.CharacterInfo.Name = \"Marlon \"Six Shots\" Kravitz\";"`
 
 ### 2. PRE-GENERATION DIAGNOSTIC
 Before writing the C# script you must perform this internal analysis:
@@ -41,7 +48,8 @@ Before writing the C# script you must perform this internal analysis:
 3. Analyze your backstory and provided instructions to prepare an initial draft of the script
 4. Write the first draft of the C# script populating the **Character State** object
 5. Compare your draft with the **Class hierarchy** and fix any syntax and naming errors
-6. Analyze your script again to fix any remaining syntax and naming errors
+6. Analyze the draft to ensure it meets all the **Crucial rules**
+7. Analyze your script again to fix any remaining syntax and naming errors
 
 ### 3. OUTPUT SCHEMA
 Output ONLY a raw JSON object. No markdown backticks.

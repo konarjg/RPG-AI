@@ -23,14 +23,14 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
       return NotFound();
     }
     
-    return Ok(MapResponse(gameSystem));
+    return Ok(RpgAI.Mappers.GameSystemApiMapper.ToResponse(gameSystem));
   }
 
   [HttpGet(GameSystemRoutes.Browse)]
   public async Task<ActionResult<CursorResult<BrowseGameSystemsResponse>>> BrowseAsync([FromQuery] BrowseGameSystemsRequest request) {
     BrowseSystemsQuery query = new(request.PageSize, request.SearchPhrase, request.Cursor, null);
     CursorResult<GameSystem> gameSystems = await provider.BrowseGameSystemsAsync(query);
-    CursorResult<BrowseGameSystemsResponse> response = new(gameSystems.Items.Select(g => new BrowseGameSystemsResponse(g.Id, g.Title, g.Overview, g.IsPublic))
+    CursorResult<BrowseGameSystemsResponse> response = new(gameSystems.Items.Select(RpgAI.Mappers.GameSystemApiMapper.ToBrowseResponse)
                                                                       .ToList(),gameSystems.NextCursor,gameSystems.HasMoreItems);
     
     return Ok(response);
@@ -48,27 +48,6 @@ public class GameSystemsController(IGameSystemProvider provider, IGameSystemRepo
     UploadGameSystemCommand command = new(request.Title,request.Overview,rulebookStream, rulebookFile.ContentType,schemaStream);
     GameSystem gameSystem = await reporter.UploadGameSystemAsync(command);
 
-    return CreatedAtAction(nameof(GetAsync), new { id = gameSystem.Id }, MapResponse(gameSystem));
-  }
-
-  private GameSystemResponse MapResponse(GameSystem gameSystem) {
-    List<RulebookChapterResponse> chapters = gameSystem.Chapters
-                                                       .Select(c => 
-                                                         new RulebookChapterResponse(
-                                                           c.Content,
-                                                           c.Summary
-                                                         )
-                                                       )
-                                                       .ToList();
-
-    GameSystemResponse response = new(gameSystem.Id,
-      gameSystem.Title,
-      gameSystem.Overview,
-      gameSystem.IsPublic,
-      gameSystem.CharacterCreationGuide,
-      chapters
-    );
-
-    return response;
+    return CreatedAtAction(nameof(GetAsync), new { id = gameSystem.Id }, RpgAI.Mappers.GameSystemApiMapper.ToResponse(gameSystem));
   }
 }

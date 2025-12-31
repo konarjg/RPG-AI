@@ -1,6 +1,7 @@
 namespace Infrastructure.Infrastructure.AiClient.Clients;
 
 using System.ClientModel;
+using System.ClientModel.Primitives;
 using System.Diagnostics.CodeAnalysis;
 using Application.Exceptions;
 using Domain.Ports.Infrastructure.Dtos;
@@ -18,6 +19,8 @@ using Options;
 using Util;
 using File = System.IO.File;
 using JsonSchema = NJsonSchema.JsonSchema;
+using System.Diagnostics;
+using global::Infrastructure.Diagnostics;
 
 public class OpenAiCharacterGenerationClient : ICharacterGenerationClient {
 
@@ -26,7 +29,9 @@ public class OpenAiCharacterGenerationClient : ICharacterGenerationClient {
   private readonly Lazy<Task<string>> _characterGenerationPrompt;
   private readonly ILogger<OpenAiCharacterGenerationClient> _logger;
 
-  public OpenAiCharacterGenerationClient(ILogger<OpenAiCharacterGenerationClient> logger, IOptions<AiClientOptions> options) {
+  public OpenAiCharacterGenerationClient(ILogger<OpenAiCharacterGenerationClient> logger, 
+                                         IOptions<AiClientOptions> options,
+                                         IHttpClientFactory httpClientFactory) {
     _options = options.Value;
     _logger = logger;
     
@@ -35,7 +40,8 @@ public class OpenAiCharacterGenerationClient : ICharacterGenerationClient {
     );
     
     _characterGenerationClient = new OpenAIClient(new ApiKeyCredential(_options.CharacterGenerationAgent.ApiKey),new OpenAIClientOptions() {
-      Endpoint = new Uri(_options.CharacterGenerationAgent.BaseUrl)
+      Endpoint = new Uri(_options.CharacterGenerationAgent.BaseUrl),
+      Transport = new HttpClientPipelineTransport(httpClientFactory.CreateClient("GenerativeAi"))
     });
   }
   
@@ -67,23 +73,44 @@ public class OpenAiCharacterGenerationClient : ICharacterGenerationClient {
     };
 
     ChatClient chatClient = _characterGenerationClient.GetChatClient(_options.CharacterGenerationAgent.Model);
-    ClientResult<ChatCompletion> completion = await chatClient.CompleteChatAsync(prompt, options);
     
-    string rawResponse = completion.GetRawResponse().Content.ToString() 
-                         ?? throw new CharacterGenerationException("Could not generate a character. No response available.");
-    
-    
-    AiStructuredResponse structuredResponse = JsonConvert.DeserializeObject<AiStructuredResponse>(rawResponse) 
-                                              ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
+    using Activity? activity = RpgAiActivitySource.Instance.StartActivity("GenerateCharacter");
+    activity?.SetTag("gen_ai.system", "openai");
+    activity?.SetTag("gen_ai.request.model", _options.CharacterGenerationAgent.Model);
+    activity?.SetTag("gen_ai.prompt", userPrompt);
+    activity?.SetTag("gen_ai.system_prompt", systemPrompt);
 
-    string responseRaw = completion.Value.Content?[0]?.Text
-                         ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
-    
-    AiGenerateCharacterResponse response = JsonConvert.DeserializeObject<AiGenerateCharacterResponse>(responseRaw)
-           ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
+    using (_logger.BeginScope(new Dictionary<string, object> { ["CharacterConcept"] = request.Concept ?? "None" })) {
+        _logger.LogInformation("Starting character generation.");
+        
+        try {
+            ClientResult<ChatCompletion> completion = await chatClient.CompleteChatAsync(prompt, options);
 
-    _logger.LogInformation(structuredResponse.Choices.First().Message.Reasoning ?? "[NO REASONING FOUND]");
+            string rawResponse = completion.GetRawResponse().Content.ToString() 
+                                 ?? throw new CharacterGenerationException("Could not generate a character. No response available.");
+            
+            activity?.SetTag("gen_ai.response", rawResponse);
     
-    return response;
+            AiStructuredResponse structuredResponse = JsonConvert.DeserializeObject<AiStructuredResponse>(rawResponse) 
+                                                      ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
+
+            string responseRaw = completion.Value.Content?[0]?.Text
+                                 ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
+    
+            AiGenerateCharacterResponse response = JsonConvert.DeserializeObject<AiGenerateCharacterResponse>(responseRaw)
+                   ?? throw new CharacterGenerationException("Could not generate a character. Invalid response format.");
+
+            string? reasoning = structuredResponse.Choices.First().Message.Reasoning;
+            activity?.SetTag("gen_ai.reasoning", reasoning);
+            
+            _logger.LogInformation("Character generation completed. Reasoning: {Reasoning}", reasoning ?? "[NO REASONING FOUND]");
+            return response;
+        } catch (Exception ex) {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.AddException(ex);
+            _logger.LogError(ex, "Character generation failed.");
+            throw;
+        }
+    }
   }
 }

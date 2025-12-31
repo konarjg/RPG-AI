@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 using OpenAI;
 using OpenAI.Embeddings;
 using Options;
+using System.Diagnostics;
+using global::Infrastructure.Diagnostics;
 
 public class OpenAiEmbeddingClient : IEmbeddingClient {
   private AiClientOptions _options;
@@ -21,6 +23,11 @@ public class OpenAiEmbeddingClient : IEmbeddingClient {
   }
   
   public async Task<AiEmbedTextResponse> EmbedTextAsync(AiEmbedTextRequest request) {
+    using Activity? activity = RpgAiActivitySource.Instance.StartActivity("EmbedText");
+    activity?.SetTag("gen_ai.system", "openai");
+    activity?.SetTag("gen_ai.operation.name", "embedding");
+    activity?.SetTag("gen_ai.request.model", _options.EmbeddingAgent.Model);
+
     EmbeddingClient embeddingClient = _embeddingClient.GetEmbeddingClient(_options.EmbeddingAgent.Model);
     ClientResult<OpenAIEmbedding> embeddings = await embeddingClient.GenerateEmbeddingAsync(request.Text);
 
@@ -32,6 +39,12 @@ public class OpenAiEmbeddingClient : IEmbeddingClient {
       return new List<AiEmbedTextResponse>();
     }
     
+    using Activity? activity = RpgAiActivitySource.Instance.StartActivity("EmbedAllTexts");
+    activity?.SetTag("gen_ai.system", "openai");
+    activity?.SetTag("gen_ai.operation.name", "embedding");
+    activity?.SetTag("gen_ai.request.model", _options.EmbeddingAgent.Model);
+    activity?.SetTag("gen_ai.request.batch_size", requests.Count);
+
     EmbeddingClient embeddingClient = _embeddingClient.GetEmbeddingClient(_options.EmbeddingAgent.Model);
     List<string> inputs = requests.Select(r => r.Text).ToList();
     

@@ -6,6 +6,12 @@ public record AiClientOptions {
   public CharacterGenerationAgent CharacterGenerationAgent { get; init; }
 }
 
+public record TracingOptions {
+  public string PublicKey { get; init; }
+  public string SecretKey { get; init; }
+  public string Host { get; init; } = "https://cloud.langfuse.com";
+}
+
 public record RulebookAgent {
   public string Model { get; init; }
   public string Prompt { get; init; }

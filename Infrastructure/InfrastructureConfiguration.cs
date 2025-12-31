@@ -17,10 +17,10 @@ using Persistence;
 public static class InfrastructureConfiguration {
   public static IServiceCollection AddInfrastructure(this IServiceCollection serviceCollection, IConfiguration configuration) {
     string connectionString = configuration.GetConnectionString("Dev");
-    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+    NpgsqlDataSourceBuilder dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
     dataSourceBuilder.EnableDynamicJson();
     dataSourceBuilder.UseVector();
-    var dataSource = dataSourceBuilder.Build();
+    NpgsqlDataSource dataSource = dataSourceBuilder.Build();
     
     serviceCollection.AddDbContext<DatabaseContext>(options => options.UseNpgsql(dataSource,
       o => {
@@ -41,6 +41,12 @@ public static class InfrastructureConfiguration {
     serviceCollection.AddScoped<IEmbeddingClient,OpenAiEmbeddingClient>();
     serviceCollection.AddScoped<ICharacterGenerationClient,OpenAiCharacterGenerationClient>();
     serviceCollection.AddScoped<IAiClient, AiClient>();
+
+    serviceCollection.AddHttpClient("GenerativeAi")
+      .AddStandardResilienceHandler();
+
+    TracingOptions tracingOptions = configuration.GetSection("Tracing").Get<TracingOptions>() ?? new TracingOptions();
+    serviceCollection.AddTracing(tracingOptions);
 
     return serviceCollection;
   }

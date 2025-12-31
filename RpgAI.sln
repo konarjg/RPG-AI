@@ -42,4 +42,7 @@ Global
 		{A4E2FE18-F343-492B-A2AA-D7206FEC6F10}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A4E2FE18-F343-492B-A2AA-D7206FEC6F10}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
 EndGlobal

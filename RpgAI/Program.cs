@@ -4,7 +4,11 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using RpgAI;
 
-var builder = WebApplication.CreateBuilder(args);
+using Serilog;
+
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog(LoggingConfiguration.ConfigureLogging);
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -19,12 +23,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGenNewtonsoftSupport();
 
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 try {
   Console.WriteLine("Applying database migrations...");
   
-  using (var scope = app.Services.CreateScope()) {
+  using (IServiceScope scope = app.Services.CreateScope()) {
     DatabaseContext dbContext = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
     await dbContext.Database.MigrateAsync();
 
@@ -51,9 +55,13 @@ catch (Exception ex) {
 app.UseSwagger();
 app.UseSwaggerUI(); 
 
+app.UseSerilogRequestLogging(); 
+
 app.UseRouting(); 
 app.MapControllers();
 
 //app.UseHttpsRedirection();
 
 app.Run();
+
+

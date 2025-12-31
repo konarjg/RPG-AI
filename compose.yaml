@@ -17,6 +17,9 @@ services:
       - AiClient__EmbeddingAgent__ApiKey=${CLOUDFLARE_API_KEY}
       - AiClient__CharacterGenerationAgent__BaseUrl=${CEREBRAS_BASE_URL}
       - AiClient__CharacterGenerationAgent__ApiKey=${CEREBRAS_API_KEY}
+      - Tracing__PublicKey=${LANGFUSE_PUBLIC_KEY}
+      - Tracing__SecretKey=${LANGFUSE_SECRET_KEY}
+      - Tracing__Host=${LANGFUSE_HOST:-https://cloud.langfuse.com}
       - ASPNETCORE_URLS=http://+:8080
     depends_on:
       db:

@@ -9,7 +9,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DatabaseCo
   {
     const string designTimeConnectionString = "Host=localhost;Database=design_time_db;Username=postgres;Password=password";
 
-    var builder = new DbContextOptionsBuilder<DatabaseContext>();
+    DbContextOptionsBuilder<DatabaseContext> builder = new DbContextOptionsBuilder<DatabaseContext>();
         
     builder.UseNpgsql(designTimeConnectionString, b => 
     {
